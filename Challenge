@@ -2,10 +2,6 @@ import json
 import pandas as pd
 import numpy as np
 import re
-from sqlalchemy import create_engine
-import psycopg2
-
-from config import db_password
 
 file_dir = "data_files"
 
@@ -225,8 +221,6 @@ def data_transform(wiki_data, kaggle_data, ratings_data)
         print ("A column being dropped does not exist")
         pass
     
-    
-    ## DEFINE FUNCTION to fill in missing Kaggle Data
     def fill_missing_kaggle_data(df, kaggle_column, wiki_column):
         df[kaggle_column] = df.apply(
             lambda row: row[wiki_column] if row[kaggle_column] == 0 else row[kaggle_column], axis=1)
@@ -297,6 +291,12 @@ def data_transform(wiki_data, kaggle_data, ratings_data)
     rating_counts.columns = ['rating_' + str(col) for col in rating_counts.columns]
     movies_with_ratings_df = pd.merge(movies_df, rating_counts, left_on='kaggle_id', right_index=True, how='left')
     movies_with_ratings_df[rating_counts.columns] = movies_with_ratings_df[rating_counts.columns].fillna(0)
+    
+
+from sqlalchemy import create_engine
+import psycopg2
+
+from config import db_password
 
     # LOAD DATA INTO SQL DATABASE TABLES
 
@@ -320,15 +320,8 @@ def data_transform(wiki_data, kaggle_data, ratings_data)
         
     except psycopg2.Error as error:
         print (error)
-    
-    
-
 
     return movies_with_ratings_df
-    
-
-
-# In[ ]:
 
 
 with open(f'{file_dir}/wikipedia-movies.json', mode='r') as file:
@@ -337,9 +330,6 @@ with open(f'{file_dir}/wikipedia-movies.json', mode='r') as file:
 kaggle_metadata = pd.read_csv(f'{file_dir}/movies_metadata.csv', low_memory=False)
 
 ratings = pd.read_csv(f'{file_dir}/ratings.csv')
-
-
-# In[ ]:
 
 
 movies_with_ratings=data_transform(wiki_movies_raw,kaggle_metadata,ratings)
